@@ -18,18 +18,36 @@ class GomokuEnv(gym.Env):
         self.board_size = board_size
         # Action space: 1-D index on board
         self.action_space = spaces.Discrete(self.board_size * self.board_size)
-        # Obervation space: matrix with size of board_size * board_size. Possible values are -1, 0, 1 representing opponent player, empty, current player
-        self.observation_space = spaces.Box(low=-1, high=1, shape=(self.board_size, self.board_size), dtype=np.int8)
+        # Obervation space: 3-chanel matrix with size of board_size * board_size.
+        self.observation_space = spaces.Tuple((
+            spaces.Box(low=-1, high=1, shape=(self.board_size, self.board_size), dtype=np.int8),  # board: -1, 0, 1 representing opponent player, empty, current player
+            spaces.Box(low=0, high=1, shape=(self.board_size, self.board_size), dtype=np.int8),    # valid_moves: 0 represents valid moves and 1 represents invalid moves
+            spaces.Box(low=0, high=1, shape=(self.board_size, self.board_size), dtype=np.int8)    # curretn player: all 1s if its agent round, all 0s otherwise
+        ))
         self.reset()
+
+    def get_state(self):
+        """
+        Create shallow copy for each chanel in current state.
+        """
+        board = np.copy(self.board)
+        valid_moves = (self.board == 0).astype(np.int8)
+        if self.current_player == 1:
+            current_chanel = np.ones((self.board_size, self.board_size), dtype=np.int8)
+        else:
+            np.zeros((self.board_size, self.board_size), dtype=np.int8)
+        return [board, valid_moves, current_chanel]
         
     def reset(self):
         """
         Reset the board
         Return deep copy of the new board.
         """
-        self.board = np.zeros((self.board_size, self.board_size), dtype=np.int8)
+        self.board = np.zeros((self.board_size, self.board_size), dtype=np.int8)\
+        # Assume agent moves first.
+        self.current_player = 1
         self.done = False
-        return np.copy(self.board)
+        return self.get_state()
     
     def step(self, action):
         """
@@ -56,7 +74,7 @@ class GomokuEnv(gym.Env):
         # Reward can be modified later
         if self.board[row, col] != 0:
             self.done = True
-            return np.copy(self.board), -100, True, {"error": "Invalid move"}
+            return np.copy(self.board), -10, True, {"error": "Invalid move"}
         
         # Agent makes the next move
         self.board[row, col] = 1
@@ -86,13 +104,14 @@ class GomokuEnv(gym.Env):
             return np.copy(self.board), 0, True, {"result": "Draw"}
         
         # Game continues
-        return np.copy(self.board), 0, False, info
+        self.current_player = 1
+        return self.get_state(), 0, False, info
     
     def check_win(self, player, row, col):
         """
-        Given current board info and player's next move check whether the current player wins
+        Given current board info and player's next move check whether the current player wins under this move
         Parameters:
-            player: integer, current player (-1 or 1)
+            player: integer, current player (-1 or 1) or 0 represenrs empty
             row, col: (int, int), position of next move
         Return: Boolean, True if win, False otherwise
         """
@@ -132,17 +151,21 @@ class GomokuEnv(gym.Env):
     def close(self):
         pass
 
-
 if __name__ == "__main__":
-    env = GomokuEnv(board_size=15)
+    env = GomokuEnv(board_size=8)
     state = env.reset()
+    print("Initial State:")
+    print("Board:")
+    print(state[0])
     env.render()
-
+    
     done = False
     while not done:
-        # Random Sample to check
+        # TODO: Random Sample to check
         action = env.action_space.sample()
         state, reward, done, info = env.step(action)
+        print("Action:", action, "Reward:", reward, "Info:", info)
         env.render()
         if done:
-            print("Game Over, reward:", reward, info)
+            print("Game Over")
+
