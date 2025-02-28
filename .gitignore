@@ -1,3 +1,5 @@
 /data/*.pkl
 *.pkl
+/data/*.npz
+*.npz
 .vscode
