@@ -33,7 +33,7 @@ def sample_full_trajectory(num_episodes, board_size = 8):
                 # Delete timesteps that are not used
                 trajectory = trajectory[:step+1]
                 break
-
+ 
         replay_buffer.append(trajectory)
 
     print(f"Finish sampling with {len(replay_buffer)} trajectories")
@@ -41,15 +41,7 @@ def sample_full_trajectory(num_episodes, board_size = 8):
     print("Saving data...")
     replay_buffer = np.array(replay_buffer, dtype=object)
     np.savez_compressed("gomoku_trajectories.npz", replay_buffer=replay_buffer)
-    
-
-    # with open("gomoku_trajectories.pkl", "wb") as f:
-    #     pickle.dump(replay_buffer, f)
 
 
 if __name__ == "__main__":
     sample_full_trajectory(100000)
-    
-    # Read Data
-    # with open("gomoku_trajectories.pkl", "rb") as f:
-    #     loaded_replay_buffer = pickle.load(f)

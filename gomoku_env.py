@@ -36,7 +36,7 @@ class GomokuEnv(gym.Env):
             current_chanel = np.ones((self.board_size, self.board_size), dtype=np.int8)
         else:
             np.zeros((self.board_size, self.board_size), dtype=np.int8)
-        return [board, valid_moves, current_chanel]
+        return np.array([board, valid_moves, current_chanel])
         
     def reset(self):
         """
@@ -52,10 +52,11 @@ class GomokuEnv(gym.Env):
     def step(self, action):
         """
         Execute the next action.
+        Return the state after both players have played. Opponent player use pre-defined policy to move.
         Parameter:
             action: int, represents 1-D index on board
         Return:
-            observation: spaces.Box, Current state on the board
+            observation (next state): spaces.Box, Current state after action.
             reward: float, Immediate Reward
             done: Boolean, Whether the current episode of game finished
             info: {}, optional
@@ -63,7 +64,7 @@ class GomokuEnv(gym.Env):
         info = {}
         # If game finish, return the current board
         if self.done:
-            return np.copy(self.board), 0, True, info
+            return self.get_state(), 0, True, info
         
         # Convert 1-D board to 2-D
         row = action // self.board_size
@@ -74,7 +75,7 @@ class GomokuEnv(gym.Env):
         # Reward can be modified later
         if self.board[row, col] != 0:
             self.done = True
-            return np.copy(self.board), -10, True, {"error": "Invalid move"}
+            return self.get_state(), -10, True, {"error": "Invalid move"}
         
         # Agent makes the next move
         self.board[row, col] = 1
@@ -82,26 +83,28 @@ class GomokuEnv(gym.Env):
         # Reward can be modified later
         if self.check_win(1, row, col):
             self.done = True
-            return np.copy(self.board), 1, True, {"result": "Agent wins"}
+            return self.get_state(), 1, True, {"result": "Agent wins"}
         
         # Check tie condition
         if not (0 in self.board):
             self.done = True
-            return np.copy(self.board), 0, True, {"result": "Draw"}
+            return self.get_state(), 0, True, {"result": "Draw"}
         
         # Opponent Randome Policy, Replace later
         empty_row_indices, empty_col_indices = np.where(self.board == 0)
         empty_positions = list(zip(empty_row_indices, empty_col_indices))
+
+        self.current_player = -1
         if empty_positions:
             opp_move = random.choice(empty_positions)
             self.board[opp_move] = -1
             # Check whether opponent wins
             if self.check_win(-1, opp_move[0], opp_move[1]):
                 self.done = True
-                return np.copy(self.board), -1, True, {"result": "Opponent wins"}
+                return self.get_state(), -1, True, {"result": "Opponent wins"}
         else:
             self.done = True
-            return np.copy(self.board), 0, True, {"result": "Draw"}
+            return self.get_state(), 0, True, {"result": "Draw"}
         
         # Game continues
         self.current_player = 1
