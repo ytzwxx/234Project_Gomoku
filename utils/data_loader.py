@@ -36,11 +36,10 @@ class GomokuDataset(Dataset):
         # reformat data to state action pairs
         self.data = []
         for episode in self.episode_data['replay_buffer']:
-            for idx in range(max(0, len(episode) - 1), len(episode)):
+            for idx in range(max(0, len(episode) - 2), len(episode)):
                 state, action, reward, next_state, done = episode[idx]
                 state = state.astype(np.float32)
                 next_state = next_state.astype(np.float32)
-                import pdb; pdb.set_trace()
                 # each state and next_state is appended with history board layouts if history_length > 0               
                 for i in range(history_length):
                     history_idx = idx - i - 1
