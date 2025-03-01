@@ -1,6 +1,7 @@
 from gomoku_env import GomokuEnv
 import pickle
 import numpy as np
+from utils.greedy_init import get_best_move_greedy
 
 def sample_full_trajectory(num_episodes, board_size = 8):
     env = GomokuEnv(board_size)
@@ -19,8 +20,9 @@ def sample_full_trajectory(num_episodes, board_size = 8):
         trajectory = np.zeros((max_steps_per_game, 5), dtype=object) 
 
         for step in range(max_steps_per_game):
-            # Random Actions
-            action = env.action_space.sample()  
+            # TODO: Change stratagy if needed.
+            # Use greedy policy here.
+            action = get_best_move_greedy(env=env)
             next_state, reward, done, info = env.step(action)  
 
             trajectory[step] = (state, action, reward, next_state, done)
@@ -44,4 +46,4 @@ def sample_full_trajectory(num_episodes, board_size = 8):
 
 
 if __name__ == "__main__":
-    sample_full_trajectory(100000)
+    sample_full_trajectory(10)

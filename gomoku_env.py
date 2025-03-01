@@ -6,14 +6,31 @@ import random
 class GomokuEnv(gym.Env):
     """
     Gomoku env based on OpenAI Gym environment.
-    Two players: player 1 and player -1
-    Board stored on 2-d Numpy Array. 0 represents empty space.
+    This environment simulates a Gomoku game of two players.
+    The board is stored in 2-d numpy array, where:
+        - 1 representing stone of agent
+        - 0 representing empty space
+        - -1 repesenting stone of opponent
+
+    Attributes:
+        board_size (int): size if Gomoku board. Default value is 8 for calculation simplicity.
+        action_space (gym.spaces.Discrete): Discrete action space (int) representing next player's next move. 
+            Converting to tuple[int, int] if needed.
+        observation_space (gym.spaces.Tuple): State space of this game. Containing 3 channels of 2-d np array:
+            - board
+            - valid_moves
+            - curretn player
     """
     # Board Visualization Mode
     metadata = {'render.modes': ['human']}
     
-    # Default board size is 8*8 for simplicity
     def __init__(self, board_size=8):
+        '''
+        Initialize the Gomoku environment.
+
+        Parameters:
+            board_size (int): The size of the the Gomoku board. Defaults value is  8.
+        '''
         super(GomokuEnv, self).__init__()
         self.board_size = board_size
         # Action space: 1-D index on board
@@ -28,20 +45,31 @@ class GomokuEnv(gym.Env):
 
     def get_state(self):
         """
-        Create shallow copy for each chanel in current state.
+        Get the current state of the board by creating deep copy for each chanel.
+
+        Returns:
+            np.ndarray: containing three 2-d np arrays:
+                - board
+                - valid_moves
+                - curretn player
         """
         board = np.copy(self.board)
         valid_moves = (self.board == 0).astype(np.int8)
         if self.current_player == 1:
             current_chanel = np.ones((self.board_size, self.board_size), dtype=np.int8)
         else:
-            np.zeros((self.board_size, self.board_size), dtype=np.int8)
+            current_chanel = np.zeros((self.board_size, self.board_size), dtype=np.int8)
         return np.array([board, valid_moves, current_chanel])
         
     def reset(self):
         """
-        Reset the board
-        Return deep copy of the new board.
+        Reset the state to initial state and return deep copy of new state.
+
+        Returns:
+            np.ndarray: containing three 2-d np arrays:
+                - board
+                - valid_moves
+                - curretn player
         """
         self.board = np.zeros((self.board_size, self.board_size), dtype=np.int8)\
         # Assume agent moves first.
@@ -51,15 +79,16 @@ class GomokuEnv(gym.Env):
     
     def step(self, action):
         """
-        Execute the next action.
-        Return the state after both players have played. Opponent player use pre-defined policy to move.
-        Parameter:
-            action: int, represents 1-D index on board
-        Return:
-            observation (next state): spaces.Box, Current state after action.
-            reward: float, Immediate Reward
-            done: Boolean, Whether the current episode of game finished
-            info: {}, optional
+        Execute the next action in current state.
+        Return the (s',r, done, info) after both players have played. Opponent player use pre-defined policy to move.
+
+        Parameters:
+            action (int): element from gym.spaces.Discrete
+        Returns:
+            observation (gym.spaces.Box): next state.
+            reward (int): Immediate Reward.
+            done (bool): Whether the current episode of game finished.
+            info (dict): indicating what makes game ends.
         """
         info = {}
         # If game finish, return the current board
@@ -113,10 +142,13 @@ class GomokuEnv(gym.Env):
     def check_win(self, player, row, col):
         """
         Given current board info and player's next move check whether the current player wins under this move
+
         Parameters:
-            player: integer, current player (-1 or 1) or 0 represenrs empty
-            row, col: (int, int), position of next move
-        Return: Boolean, True if win, False otherwise
+            player (int): , current player (-1 or 1) or 0 represenrs empty
+            row (int): y-index of next move
+            col (int): x-index of next move
+        Returns: 
+            bool: True if win after next move, False otherwise
         """
         # define 4 directions
         directions = [(1,0), (0,1), (1,1), (1,-1)]
@@ -151,9 +183,6 @@ class GomokuEnv(gym.Env):
             board_str += row_str + "\n"
         print(board_str)
     
-    def close(self):
-        pass
-
 if __name__ == "__main__":
     env = GomokuEnv(board_size=8)
     state = env.reset()
