@@ -27,7 +27,7 @@ class policyNetCNN(nn.Module):
         Inspired by DeepMind's AlphaGo Zero architecture.
         board_size: Size of the Go board (e.g., 19 for 19x19).
         input_channels: Number of input feature planes (e.g., history of previous moves, legal moves, captured stones, 17 in DeepMind's AlphaGo.)
-                        In our's, at least 1 for current observation, 1 for legal moves. N for history of previous moves. Overall, N+2.
+                        In our's, at least 1 for current observation, 1 for legal moves, 1 for current mover. N for history of previous moves. Overall, N+3.
         num_filters: Number of convolutional filters per layer (256 in AlphaGo).
         """
         super(policyNetCNN, self).__init__()
@@ -50,7 +50,7 @@ class policyNetCNN(nn.Module):
         x = F.relu(self.policy_conv(x))  # Reduce channels
         x = torch.flatten(x, start_dim=1)  # Flatten before fully connected layer
         x = self.policy_fc(x)
-        x = F.log_softmax(x, dim=1)  # Log probability output
+        # x = F.log_softmax(x, dim=1)  # Log probability output (use CrossEntropyLoss)
         return x
 
     def predict(self, x):
@@ -61,7 +61,7 @@ class policyNetCNN(nn.Module):
         self.eval()
         with torch.no_grad():
             x = self.forward(x)
-            return torch.argmax(x)
+            return torch.argmax(x, dim=1)
             
 
 def np2torch(x, cast_double_to_float=True):

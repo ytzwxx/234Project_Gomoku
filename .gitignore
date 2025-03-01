@@ -3,3 +3,5 @@
 /data/*.npz
 *.npz
 .vscode
+*.pdf
+*.pth
