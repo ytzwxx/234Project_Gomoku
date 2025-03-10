@@ -131,12 +131,16 @@ def check_pattern(line):
     '''
 
     line_str = "".join(str(x) for x in line)
+    # Simple five
     if "11111" in line_str:
         return 200
-    elif "011110" in line_str:
-        return 100
-    elif "11110" in line_str or "01111" in line_str or "11011" in line_str:
+    # Double four
+    elif "011110" in line_str or :
         return 50
+    # Simple four
+    elif "11110" in line_str or "01111" in line_str or "11011" in line_str:
+        return 60
+    # Double three
     elif "01110" in line_str:
         return 25
     elif "11100" in line_str or "00111" in line_str or "10110" in line_str:
