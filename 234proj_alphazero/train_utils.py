@@ -168,7 +168,9 @@ def softmax_sample(visit_counts):
 # TODO: Modify logic of training network
 def train_network(config: AlphaZeroConfig, storage: SharedStorage,
           replay_buffer: ReplayBuffer):
-  network = AlphaZeroNet().to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+  # network = AlphaZeroNet().to(device)
+  network = storage.latest_network()
+  network.train()
   optimizer = torch.optim.SGD(network.parameters(), 
                               lr=2e-1, 
                               momentum=config.momentum, weight_decay=config.weight_decay)
@@ -189,7 +191,7 @@ def train_network(config: AlphaZeroConfig, storage: SharedStorage,
       loss.backward()
       optimizer.step()
     # update_weights(optimizer, network, batch, config.weight_decay)
-  storage.save_network(config.training_steps, network)
+  storage.save_network(config.training_steps, network.eval())
 
 
 

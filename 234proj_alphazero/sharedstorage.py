@@ -19,3 +19,6 @@ class SharedStorage(object):
 
   def save_network(self, step: int, network: AlphaZeroNet):
     self._networks[step] = network
+  
+  def get_num_networks(self):
+    return len(self._networks)
