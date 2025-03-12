@@ -44,6 +44,123 @@ def np2torch(x, cast_double_to_float=True):
         x = x.float()
     return x
 
+
+def augmentation(game):
+  """
+    Use Gomoku game's Symmetry property to generate 7 more samples.
+    Update board, history in original Game.
+  """
+  games = []
+  games.append(game)
+
+  # Rotate 90:
+  game_90 = game.clone()
+  history_90 = []
+  for h in game_90.history:
+    n = game_90.size
+    x = h // n
+    y = h % n
+    x = y
+    y = n - 1- x
+    h_new = x * n + y
+    history_90.append(h_new)
+  game_90.history = history_90
+  game_90.build_state()
+  games.append(game_90)
+
+  # Rotate 180:
+  game_180 = game.clone()
+  history_180 = []
+  for h in game_180.history:
+    n = game_180.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = n - 1 -y
+    h_new = x * n + y
+    history_180.append(h_new)
+  game_180.history = history_180
+  game_180.build_state()
+  games.append(game_180)
+
+  # Rotate 270:
+  game_270 = game.clone()
+  history_270 = []
+  for h in game_270.history:
+    n = game_270.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = n - 1 -y
+    h_new = x * n + y
+    history_270.append(h_new)
+  game_270.history = history_270
+  game_270.build_state()
+  games.append(game_270)
+
+  # flip horizontally
+  game_fl_h = game.clone()
+  history_fl_h= []
+  for h in game_fl_h.history:
+    n = game_fl_h.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = y
+    h_new = x * n + y
+    history_fl_h.append(h_new)
+  game_fl_h.history = history_fl_h
+  game_fl_h.build_state()
+  games.append(game_fl_h)
+
+  # flip vertically
+  game_fl_v = game.clone()
+  history_fl_v= []
+  for h in game_fl_v.history:
+    n = game_fl_v.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = y
+    h_new = x * n + y
+    history_fl_v.append(h_new)
+  game_fl_v.history = history_fl_v
+  game_fl_v.build_state()
+  games.append(game_fl_v)
+
+  # flip main diagonal
+  game_fl_d = game.clone()
+  history_fl_d= []
+  for h in game_fl_d.history:
+    n = game_fl_d.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = y
+    h_new = x * n + y
+    history_fl_d.append(h_new)
+  game_fl_d.history = history_fl_d
+  game_fl_d.build_state()
+  games.append(game_fl_d)
+
+  # flip main sub-diagonal
+  game_fl_sd = game.clone()
+  history_fl_sd= []
+  for h in game_fl_sd.history:
+    n = game_fl_sd.size
+    x = h // n
+    y = h % n
+    x = n - 1- x
+    y = y
+    h_new = x * n + y
+    history_fl_sd.append(h_new)
+  game_fl_sd.history = history_fl_sd
+  game_fl_sd.build_state()
+  games.append(game_fl_sd)
+    
+  return games
+
+
 # Each self-play job is independent of all others; it takes the latest network
 # snapshot, produces a game and makes it available to the training job by
 # writing it to a shared replay buffer.
@@ -53,7 +170,9 @@ def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
     # print(f'==============begin game {i}==============')
     network = copy.deepcopy(storage.latest_network())
     game = play_game(config, network)
-    replay_buffer.save_game(game)
+    games = augmentation(game)
+    for g in games: 
+      replay_buffer.save_game(g)
 
 
 # Each game is produced by starting at the initial board position, then
