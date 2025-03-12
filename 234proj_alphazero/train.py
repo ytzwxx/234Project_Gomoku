@@ -9,7 +9,7 @@ from typing import List
 import random
 import numpy as np
 import threading
-import tqdm
+from tqdm import tqdm
 
 if __name__ == "__main__":
     
