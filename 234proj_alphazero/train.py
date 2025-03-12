@@ -17,7 +17,23 @@ if __name__ == "__main__":
     replay_buffer = ReplayBuffer(config)
 
     # main body of training
-    for _ in range(config.max_iter):
-        for _ in range(config.num_actors):
+    
+    print("Training begins.")
+    for self_play_round in range(config.max_iter):
+        for _ in range(config.num_actors): # samples. Convert from parrallel to sequential
             run_selfplay(config, storage, replay_buffer)
+
+        print(f"Self-play round {self_play_round} complete.")
+        storage.self_play_round = self_play_round
         train_network(config, storage, replay_buffer)
+
+        print(f"Training round {self_play_round} losses \n \
+                value loss: {storage.value_loss[-1]} \n \
+                policy loss: {storage.policy_loss[-1]} \n \
+                total loss: {storage.total_loss[-1]}")
+
+        if self_play_round % config.save_play_time_interval == 0 and config.save_after_each_play_interval:
+            storage.save_network_after_play()
+    
+    storage.save_loss()
+    print("Training complete.")

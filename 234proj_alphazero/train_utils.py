@@ -184,9 +184,14 @@ def train_network(config: AlphaZeroConfig, storage: SharedStorage,
       target_policy = np2torch(np.array(target_policy))
       value, policy_logits = network.inference(image_tensor)
       policy_logits = policy_logits.squeeze(0)
+      value_loss = torch.nn.functional.mse_loss(value, target_value)
+      policy_loss = torch.nn.functional.cross_entropy(policy_logits, target_policy)
+      loss = value_loss + policy_loss
+      # loss = torch.nn.functional.mse_loss(value, target_value) + \
+      #        torch.nn.functional.cross_entropy(policy_logits, target_policy)
+      # save loss
+      storage.record_loss(value_loss.item(), policy_loss.item(), loss.item())
 
-      loss = torch.nn.functional.mse_loss(value, target_value) + \
-             torch.nn.functional.cross_entropy(policy_logits, target_policy)
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
