@@ -6,6 +6,8 @@ from utils import data_loader, networks, gym_utils
 from utils.networks import np2torch
 from torch.utils.data import DataLoader, random_split
 
+root_folder = "initial_training_10_res"
+
 if __name__ == '__main__':
     npz_file_path = 'data/gomoku_trajectories.npz'
 
@@ -70,7 +72,7 @@ if __name__ == '__main__':
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss
             }
-            torch.save(checkpoint, f'initial_training/checkpoint_epoch_{epoch}.pth')
+            torch.save(checkpoint, f'{root_folder}/checkpoint_epoch_{epoch}.pth')
             # eval
             model.eval()
             correct = 0
@@ -89,8 +91,8 @@ if __name__ == '__main__':
                 test_losses.append(test_loss / len(test_loader))
                 print(f'Epoch {epoch}, Validation Loss: {test_loss / len(test_loader):.4f}')
                 print(f'Epoch {epoch}, Validation Accuracy: {100 * correct / total:.2f}%')
-    torch.save(model.state_dict(), 'initial_training/model.pth') 
-    np.save('initial_training/train_losses.npy', np.array(train_losses))
+    torch.save(model.state_dict(), f'{root_folder}/model.pth') 
+    np.save(f'{root_folder}/train_losses.npy', np.array(train_losses))
     eval_every = cfg['eval_every']
-    np.save(f'initial_training/test_losses_every_{eval_every}_epoches.npy', np.array(test_losses))
+    np.save(f'{root_folder}/test_losses_every_{eval_every}_epoches.npy', np.array(test_losses))
     

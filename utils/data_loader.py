@@ -36,7 +36,7 @@ class GomokuDataset(Dataset):
         # reformat data to state action pairs
         self.data = []
         for episode in self.episode_data['replay_buffer']:
-            for idx in range(max(0, len(episode) - 2), len(episode)):
+            for idx in range(max(0, len(episode) - 7), len(episode)):
                 state, action, reward, next_state, done = episode[idx]
                 state = state.astype(np.float32)
                 next_state = next_state.astype(np.float32)

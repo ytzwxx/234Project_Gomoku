@@ -37,7 +37,7 @@ class policyNetCNN(nn.Module):
         
         # Residual Blocks (AlphaGo Zero uses 19 residual blocks)
         self.res_blocks = nn.Sequential(*[
-            ResidualBlock(num_filters) for _ in range(4)  # Can be adjusted
+            ResidualBlock(num_filters) for _ in range(10)  # Can be adjusted
         ])
 
         # Final policy head
