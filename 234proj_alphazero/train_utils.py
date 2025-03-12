@@ -48,7 +48,8 @@ def np2torch(x, cast_double_to_float=True):
 # writing it to a shared replay buffer.
 def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
                  replay_buffer: ReplayBuffer):
-  while True:
+  for i in range(2):
+    # print(f'==============begin game {i}==============')
     network = storage.latest_network()
     game = play_game(config, network)
     replay_buffer.save_game(game)
@@ -59,10 +60,12 @@ def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
 # of the game is reached.
 def play_game(config: AlphaZeroConfig, network: AlphaZeroNet):
   game = GomokuGame()
+
   while not game.terminal() and len(game.history) < config.max_moves:
     action, root = run_mcts(config, game, network)
     game.apply(action)
     game.store_search_statistics(root)
+
   return game
 
 
@@ -165,16 +168,21 @@ def softmax_sample(visit_counts):
 # TODO: Modify logic of training network
 def train_network(config: AlphaZeroConfig, storage: SharedStorage,
           replay_buffer: ReplayBuffer):
-  network = AlphaZeroNet()
+  network = AlphaZeroNet().to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
   optimizer = torch.optim.SGD(network.parameters(), 
-                              lr=config.learning_rate_schedule, 
+                              lr=2e-1, 
                               momentum=config.momentum, weight_decay=config.weight_decay)
   for i in range(config.training_steps):
     if i % config.checkpoint_interval == 0:
       storage.save_network(i, network)
     batch = replay_buffer.sample_batch()
     for image, (target_value ,target_policy) in batch:
-      value, policy_logits = network.inference(image)
+      image_tensor = np2torch(image).unsqueeze(0)
+      target_value = torch.tensor(target_value, dtype=torch.float32).to(device).unsqueeze(0).unsqueeze(0)
+      target_policy = np2torch(np.array(target_policy))
+      value, policy_logits = network.inference(image_tensor)
+      policy_logits = policy_logits.squeeze(0)
+
       loss = torch.nn.functional.mse_loss(value, target_value) + \
              torch.nn.functional.cross_entropy(policy_logits, target_policy)
       optimizer.zero_grad()

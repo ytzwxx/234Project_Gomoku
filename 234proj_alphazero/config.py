@@ -3,15 +3,16 @@
 class AlphaZeroConfig(object):
 
   def __init__(self):
+    self.max_iter = 100
     ### Self-Play
-    self.num_actors = 5000
+    self.num_actors = 50
 
-    self.num_sampling_moves = 30
-    self.max_moves = 512  # for chess and shogi, 722 for Go.
-    self.num_simulations = 200
+    self.num_sampling_moves = 3
+    self.max_moves = 64
+    self.num_simulations = 5
 
     # Root prior exploration noise.
-    self.root_dirichlet_alpha = 0.3  # for chess, 0.03 for Go and 0.15 for shogi.
+    self.root_dirichlet_alpha = 0.1  # for chess, 0.03 for Go and 0.15 for shogi.
     self.root_exploration_fraction = 0.25
 
     # UCB formula
@@ -19,8 +20,10 @@ class AlphaZeroConfig(object):
     self.pb_c_init = 1.25
 
     ### Training
-    self.training_steps = int(1e5)
-    self.checkpoint_interval = int(1e3)
+    # self.training_steps = int(1e5)
+    # self.checkpoint_interval = int(1e3)
+    self.training_steps = int(5)
+    self.checkpoint_interval = int(1e2)
     self.window_size = int(1e6)
     self.batch_size = 128
 

@@ -8,7 +8,7 @@ import math
 from typing import List
 import random
 import numpy as np
-
+import threading
 
 if __name__ == "__main__":
     
@@ -17,4 +17,7 @@ if __name__ == "__main__":
     replay_buffer = ReplayBuffer(config)
 
     # main body of training
-    run_selfplay(config, storage, replay_buffer)
+    for _ in range(config.max_iter):
+        for _ in range(config.num_actors):
+            run_selfplay(config, storage, replay_buffer)
+        train_network(config, storage, replay_buffer)
