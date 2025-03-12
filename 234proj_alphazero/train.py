@@ -13,15 +13,24 @@ import threading
 if __name__ == "__main__":
     
     config = AlphaZeroConfig()
-    storage = SharedStorage()
+    storage = SharedStorage(config)
     replay_buffer = ReplayBuffer(config)
-
-    # main body of training
     
+    # main body of training
     print("Training begins.")
     for self_play_round in range(config.max_iter):
-        for _ in range(config.num_actors): # samples. Convert from parrallel to sequential
-            run_selfplay(config, storage, replay_buffer)
+        for actor in range(config.num_actors): # samples. Convert from parrallel to sequential
+            print(f"Self-play round {self_play_round} actor {actor} begin.")
+            # run_selfplay(config, storage, replay_buffer)
+            threads = []
+            for i in range(config.parrallel_actor):
+                thread = threading.Thread(target=run_selfplay, args=(config, storage, replay_buffer))
+                threads.append(thread)
+                thread.start()
+            
+            for thread in threads:
+                thread.join()
+            
 
         print(f"Self-play round {self_play_round} complete.")
         storage.self_play_round = self_play_round

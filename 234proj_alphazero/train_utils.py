@@ -7,7 +7,7 @@ import math
 from typing import List
 import random
 import numpy as np
-
+import copy
 # AlphaZero training is split into two independent parts: AlphaZeroNet training and
 # self-play data generation.
 # These two parts only communicate by transferring the latest network checkpoint
@@ -27,6 +27,7 @@ import numpy as np
 #   return storage.latest_network()
 
 
+# sample_device = 'cpu'
 ##################################
 ####### Part 1: Self-Play ########
 
@@ -48,9 +49,9 @@ def np2torch(x, cast_double_to_float=True):
 # writing it to a shared replay buffer.
 def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
                  replay_buffer: ReplayBuffer):
-  for i in range(2):
+  for i in range(1):
     # print(f'==============begin game {i}==============')
-    network = storage.latest_network()
+    network = copy.deepcopy(storage.latest_network())
     game = play_game(config, network)
     replay_buffer.save_game(game)
 
@@ -125,12 +126,13 @@ def ucb_score(config: AlphaZeroConfig, parent: Node, child: Node):
 # We use the neural network to obtain a value and policy prediction.
 def evaluate(node: Node, game: GomokuGame, network: AlphaZeroNet):
   obs = np2torch(game.make_image(-1)).unsqueeze(0)
+  # obs = torch.tensor(game.make_image(-1)).unsqueeze(0).to(sample_device)
   value, policy_logits = network.inference(obs)
 
   # Expand the node.
   policy_logits = policy_logits.detach().cpu().numpy()[0]
   node.to_play = game.to_play()
-  policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
+  policy = {a: np.exp(policy_logits[a]) for a in game.legal_actions()}
   policy_sum = sum(policy.values())
   for action, p in policy.items():
     node.children[action] = Node(p / policy_sum)

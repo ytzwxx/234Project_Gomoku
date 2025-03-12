@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 # TODO
 def make_uniform_network():
     uniform_network = AlphaZeroNet()
-    uniform_network.uniform_initialization()
     return uniform_network
 
 class SharedStorage(object):
@@ -15,6 +14,7 @@ class SharedStorage(object):
   def __init__(self, config: AlphaZeroConfig):
     self._networks = {}
     self._base_idx = 0
+    self.config = config
     self.save_folder = config.save_folder
     self.self_play_round = 0
     
@@ -24,14 +24,14 @@ class SharedStorage(object):
   
   def latest_network(self) -> AlphaZeroNet:
     if self._networks:
-      return copy.deepcopy(self._networks[max(self._networks.iterkeys())].to(device))
+      return copy.deepcopy(self._networks[max(self._networks.keys())].to(device))
     else:
       return make_uniform_network().to(device)
 
   def save_network(self, step: int, network: AlphaZeroNet):
     self._networks[step] = network # Caution: this is overwriting the network at step if it already exists
   
-    if config.save_after_each_checkpoint_interval:
+    if self.config.save_after_each_checkpoint_interval:
       # save network to disk    
       os.makedirs(os.path.join(self.save_folder, f'self_play_round_{self.self_play_round}'), exist_ok=True)
       torch.save(network.state_dict(), f'{self.save_folder}/self_play_round_{self.self_play_round}/network_training_step_{step}.pth')

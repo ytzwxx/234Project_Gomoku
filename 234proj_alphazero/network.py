@@ -39,7 +39,7 @@ class AlphaZeroNet(nn.Module):
         
         # Residual Blocks (AlphaGo Zero uses 19 residual blocks)
         self.res_blocks = nn.Sequential(*[
-            ResidualBlock(num_filters) for _ in range(10)  # Can be adjusted
+            ResidualBlock(num_filters) for _ in range(4)  # Can be adjusted
         ])
 
         # Final policy head
@@ -66,23 +66,7 @@ class AlphaZeroNet(nn.Module):
         value = torch.tanh(self.value_fc2(v))
         return value, logits
 
-    def uniform_initialization(self):
-        """Initialize weights with a uniform distribution."""
-        nn.init.uniform_(self.conv1.weight, a=-0.1, b=0.1)
-        for block in self.res_blocks:
-            for conv in [block.conv1, block.conv2]:
-                nn.init.uniform_(conv.weight, a=-0.1, b=0.1)
-                nn.init.constant_(conv.bias, 0.0)
 
-        nn.init.uniform_(self.policy_conv.weight, a=-0.1, b=0.1)
-        nn.init.uniform_(self.value_conv.weight, a=-0.1, b=0.1)
-
-        nn.init.uniform_(self.policy_fc.weight, a=-0.1, b=0.1)
-        nn.init.constant_(self.policy_fc.bias, 0.0)
-        nn.init.uniform_(self.value_fc1.weight, a=-0.1, b=0.1)
-        nn.init.uniform_(self.value_fc2.weight, a=-0.1, b=0.1)
-        nn.init.constant_(self.value_fc1.bias, 0.0)
-        nn.init.constant_(self.value_fc2.bias, 0.0)
   #   State-Value function
     def inference(self, image):
       return self.forward(image)
@@ -91,3 +75,39 @@ class AlphaZeroNet(nn.Module):
     def get_weights(self):
         # Returns the weights of this network.
         return []
+    
+# class AlphaZeroNet(nn.Module):
+#     """policy-value network module"""
+#     def __init__(self, board_size = 8):
+#         super(AlphaZeroNet, self).__init__()
+
+#         self.board_width = board_size
+#         self.board_height = board_size
+#         # common layers
+#         self.conv1 = nn.Conv2d(5, 32, kernel_size=3, padding=1)
+#         self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+#         self.conv3 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+#         # action policy layers
+#         self.act_conv1 = nn.Conv2d(128, 4, kernel_size=1)
+#         self.act_fc1 = nn.Linear(4*self.board_width*self.board_height,
+#                                  self.board_width*self.board_height)
+#         # state value layers
+#         self.val_conv1 = nn.Conv2d(128, 2, kernel_size=1)
+#         self.val_fc1 = nn.Linear(2*self.board_width*self.board_height, 64)
+#         self.val_fc2 = nn.Linear(64, 1)
+
+#     def forward(self, state_input):
+#         # common layers
+#         x = F.relu(self.conv1(state_input))
+#         x = F.relu(self.conv2(x))
+#         x = F.relu(self.conv3(x))
+#         # action policy layers
+#         x_act = F.relu(self.act_conv1(x))
+#         x_act = x_act.view(-1, 4*self.board_width*self.board_height)
+#         x_act = F.log_softmax(self.act_fc1(x_act))
+#         # state value layers
+#         x_val = F.relu(self.val_conv1(x))
+#         x_val = x_val.view(-1, 2*self.board_width*self.board_height)
+#         x_val = F.relu(self.val_fc1(x_val))
+#         x_val = F.tanh(self.val_fc2(x_val))
+#         return x_val, x_act

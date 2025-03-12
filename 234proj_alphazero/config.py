@@ -5,11 +5,13 @@ class AlphaZeroConfig(object):
   def __init__(self):
     self.max_iter = 51
     ### Self-Play
-    self.num_actors = 10
+    self.num_actors = 4
+
+    self.parrallel_actor = 3
 
     self.num_sampling_moves = 3
     self.max_moves = 64
-    self.num_simulations = 400
+    self.num_simulations = 100 # roll out numbers
 
     # Root prior exploration noise.
     self.root_dirichlet_alpha = 0.1  # for chess, 0.03 for Go and 0.15 for shogi.
@@ -22,7 +24,7 @@ class AlphaZeroConfig(object):
     ### Training
     # self.training_steps = int(1e5)
     # self.checkpoint_interval = int(1e3)
-    self.training_steps = int(20)
+    self.training_steps = int(200)
     self.checkpoint_interval = int(5) # save network every x iters
     self.window_size = int(1e6)
     self.batch_size = 32
