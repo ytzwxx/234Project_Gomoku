@@ -1,19 +1,21 @@
-from network import Network
+from network import *
 
 # TODO
-def make_uniform_network(self):
-    pass
+def make_uniform_network():
+    uniform_network = AlphaZeroNet()
+    uniform_network.uniform_initialization()
+    return uniform_network
 
 class SharedStorage(object):
 
   def __init__(self):
     self._networks = {}
 
-  def latest_network(self) -> Network:
+  def latest_network(self) -> AlphaZeroNet:
     if self._networks:
-      return self._networks[max(self._networks.iterkeys())]
+      return self._networks[max(self._networks.iterkeys())].to(device)
     else:
-      return make_uniform_network()
+      return make_uniform_network().to(device)
 
-  def save_network(self, step: int, network: Network):
+  def save_network(self, step: int, network: AlphaZeroNet):
     self._networks[step] = network

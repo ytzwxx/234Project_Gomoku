@@ -8,7 +8,7 @@ class AlphaZeroConfig(object):
 
     self.num_sampling_moves = 30
     self.max_moves = 512  # for chess and shogi, 722 for Go.
-    self.num_simulations = 800
+    self.num_simulations = 200
 
     # Root prior exploration noise.
     self.root_dirichlet_alpha = 0.3  # for chess, 0.03 for Go and 0.15 for shogi.
@@ -19,10 +19,10 @@ class AlphaZeroConfig(object):
     self.pb_c_init = 1.25
 
     ### Training
-    self.training_steps = int(700e3)
+    self.training_steps = int(1e5)
     self.checkpoint_interval = int(1e3)
     self.window_size = int(1e6)
-    self.batch_size = 4096
+    self.batch_size = 128
 
     self.weight_decay = 1e-4
     self.momentum = 0.9
