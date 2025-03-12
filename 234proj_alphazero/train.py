@@ -9,6 +9,7 @@ from typing import List
 import random
 import numpy as np
 import threading
+import tqdm
 
 if __name__ == "__main__":
     
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     
     # main body of training
     print("Training begins.")
-    for self_play_round in range(config.max_iter):
+    for self_play_round in tqdm(range(config.max_iter), desc="Self play round:"):
         for actor in range(config.num_actors): # samples. Convert from parrallel to sequential
             print(f"Self-play round {self_play_round} actor {actor} begin.")
             # run_selfplay(config, storage, replay_buffer)
