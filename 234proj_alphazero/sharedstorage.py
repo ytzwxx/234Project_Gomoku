@@ -21,6 +21,14 @@ class SharedStorage(object):
     self.value_loss = []
     self.policy_loss = []
     self.total_loss = []
+
+    self.play_round_value_loss = []
+    self.play_round_policy_loss = []
+    self.play_round_total_loss = []
+
+    self.this_round_value_loss = []
+    self.this_round_policy_loss = []
+    self.this_round_total_loss = []
   
   def latest_network(self) -> AlphaZeroNet:
     if self._networks:
@@ -44,6 +52,23 @@ class SharedStorage(object):
   
   def save_network_after_play(self):
     torch.save(self.latest_network().state_dict(), f'{self.save_folder}/self_play_round_{self.self_play_round}/latest_network.pth')
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/value_loss.npy', np.array(self.value_loss))
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/policy_loss.npy', np.array(self.policy_loss))
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/total_loss.npy', np.array(self.total_loss))
+
+    self.play_round_policy_loss.append(np.mean(np.array(self.this_round_policy_loss)))
+    self.play_round_value_loss.append(np.mean(np.array(self.this_round_value_loss)))
+    self.play_round_total_loss.append(np.mean(np.array(self.this_round_total_loss)))
+
+
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/play_round_value_loss.npy', np.array(self.play_round_value_loss))
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/play_round_policy_loss.npy', np.array(self.play_round_policy_loss))
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/play_round_total_loss.npy', np.array(self.play_round_total_loss))
+
+
+    self.this_round_value_loss = []
+    self.this_round_policy_loss = []
+    self.this_round_total_loss = []
 
   def record_loss(self, value_loss, policy_loss, total_loss):
     # index is total number of training steps = config.training_steps * config.max_iter
@@ -51,7 +76,15 @@ class SharedStorage(object):
     self.policy_loss.append(policy_loss)
     self.total_loss.append(total_loss)
 
+    self.this_round_value_loss.append(value_loss)
+    self.this_round_policy_loss.append(policy_loss)
+    self.this_round_total_loss.append(total_loss)
+
   def save_loss(self):
     np.save(f'{self.save_folder}/value_loss.npy', np.array(self.value_loss))
     np.save(f'{self.save_folder}/policy_loss.npy', np.array(self.policy_loss))
     np.save(f'{self.save_folder}/total_loss.npy', np.array(self.total_loss))
+
+    np.save(f'{self.save_folder}/play_round_value_loss.npy', np.array(self.play_round_value_loss))
+    np.save(f'{self.save_folder}/play_round_policy_loss.npy', np.array(self.play_round_policy_loss))
+    np.save(f'{self.save_folder}/play_round_total_loss.npy', np.array(self.play_round_total_loss))

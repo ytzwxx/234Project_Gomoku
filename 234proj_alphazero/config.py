@@ -3,11 +3,11 @@
 class AlphaZeroConfig(object):
 
   def __init__(self):
-    self.max_iter = 51
+    self.max_iter = 80
     ### Self-Play
-    self.num_actors = 4
+    self.num_actors = 5
 
-    self.parrallel_actor = 3
+    self.parrallel_actor = 4
 
     self.num_sampling_moves = 3
     self.max_moves = 64
@@ -27,11 +27,11 @@ class AlphaZeroConfig(object):
     self.training_steps = int(200)
     self.checkpoint_interval = int(5) # save network every x iters
     self.window_size = int(1e6)
-    self.batch_size = 32
+    self.batch_size = 128
 
     self.save_folder = 'training_results'
     
-    self.save_play_time_interval = 25
+    self.save_play_time_interval = 5
 
     self.save_after_each_checkpoint_interval = True
     self.save_after_each_play_interval = True
