@@ -7,3 +7,5 @@
 *.pth
 *.npy
 *.png
+__pycache__
+234proj_alphazero/__pycache__
