@@ -15,10 +15,10 @@ class AlphaZeroConfig(object):
 
     # Root prior exploration noise.
     self.root_dirichlet_alpha = 0.1  # for chess, 0.03 for Go and 0.15 for shogi.
-    self.root_exploration_fraction = 0.25
+    self.root_exploration_fraction = 0.1
 
     # UCB formula
-    self.pb_c_base = 19652
+    self.pb_c_base = 3500
     self.pb_c_init = 1.25
 
     ### Training
