@@ -29,16 +29,35 @@ class SharedStorage(object):
     self.this_round_value_loss = []
     self.this_round_policy_loss = []
     self.this_round_total_loss = []
+
+    self.use_history_network = False
+    self.history_network = AlphaZeroNet()
+
+    self.self_play_times = []
+
+    if config.use_history_network:
+      self.load_network(config.history_network_path)
   
+  def load_network(self, path):
+    print(f'Loading network from {path}')
+    self.history_network.load_state_dict(torch.load(path))
+    self.history_network.to(device)
+    self.history_network.eval()
+    self.use_history_network = True
+    dummy_input = np.random.choice([-1, 0, 1], size=(1,5,8,8))
+    value, policy = self.history_network(torch.tensor(dummy_input, dtype=torch.float32).to(device))
+
   def latest_network(self) -> AlphaZeroNet:
     if self._networks:
       return copy.deepcopy(self._networks[max(self._networks.keys())].to(device))
+    elif self.use_history_network:
+      return self.history_network.to(device)
     else:
       return make_uniform_network().to(device)
 
   def save_network(self, step: int, network: AlphaZeroNet):
-    self._networks[step] = network # Caution: this is overwriting the network at step if it already exists
-  
+    self._networks[step] = copy.deepcopy(network) # Caution: this is overwriting the network at step if it already exists
+    self._networks[step].eval()
     if self.config.save_after_each_checkpoint_interval:
       # save network to disk    
       os.makedirs(os.path.join(self.save_folder, f'self_play_round_{self.self_play_round}'), exist_ok=True)
@@ -65,6 +84,7 @@ class SharedStorage(object):
     np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/play_round_policy_loss.npy', np.array(self.play_round_policy_loss))
     np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/play_round_total_loss.npy', np.array(self.play_round_total_loss))
 
+    np.save(f'{self.save_folder}/self_play_round_{self.self_play_round}/self_play_times.npy', np.array(self.self_play_times))
 
     self.this_round_value_loss = []
     self.this_round_policy_loss = []

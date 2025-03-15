@@ -8,6 +8,7 @@ from typing import List
 import random
 import numpy as np
 import copy
+import time
 # AlphaZero training is split into two independent parts: AlphaZeroNet training and
 # self-play data generation.
 # These two parts only communicate by transferring the latest network checkpoint
@@ -169,10 +170,12 @@ def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
   for i in range(1):
     # print(f'==============begin game {i}==============')
     network = copy.deepcopy(storage.latest_network())
+    network.eval()
     game = play_game(config, network)
-    games = augmentation(game)
-    for g in games: 
-      replay_buffer.save_game(g)
+    replay_buffer.save_game(game)
+    # games = augmentation(game)
+    # for g in games: 
+    #   replay_buffer.save_game(g)
 
 
 # Each game is produced by starting at the initial board position, then
@@ -180,12 +183,17 @@ def run_selfplay(config: AlphaZeroConfig, storage: SharedStorage,
 # of the game is reached.
 def play_game(config: AlphaZeroConfig, network: AlphaZeroNet):
   game = GomokuGame()
-
+  # start_time = time.time()
   while not game.terminal() and len(game.history) < config.max_moves:
     action, root = run_mcts(config, game, network)
-    game.apply(action)
-    game.store_search_statistics(root)
+    # (print('mcts time: ', time.time() - start_time))
 
+    game.apply(action)
+
+    # print(len(game.history))
+    # print(game.board)
+    game.store_search_statistics(root)
+  # print(f'Game time: {time.time() - start_time}')
   return game
 
 
@@ -197,7 +205,8 @@ def run_mcts(config: AlphaZeroConfig, game: GomokuGame, network: AlphaZeroNet):
   root = Node(0)
   evaluate(root, game, network)
   add_exploration_noise(config, root)
-
+  
+  # start_time = time.time()
   for _ in range(config.num_simulations):
     node = root
     scratch_game = game.clone()
@@ -210,6 +219,7 @@ def run_mcts(config: AlphaZeroConfig, game: GomokuGame, network: AlphaZeroNet):
 
     value = evaluate(node, scratch_game, network)
     backpropagate(search_path, value, scratch_game.to_play())
+  # print("simulation time: ", time.time() - start_time)
   return select_action(config, game, root), root
 
 
@@ -293,12 +303,16 @@ def train_network(config: AlphaZeroConfig, storage: SharedStorage,
   network = storage.latest_network()
   network.train()
   optimizer = torch.optim.SGD(network.parameters(), 
-                              lr=2e-1, 
+                              # lr=2e-1,
+                              lr = config.lr, 
                               momentum=config.momentum, weight_decay=config.weight_decay)
+
+  # optimizer = torch.optim.Adam(network.parameters(), lr=config.lr, weight_decay=config.weight_decay)
   for i in range(config.training_steps):
     if i % config.checkpoint_interval == 0:
       storage.save_network(i, network)
     batch = replay_buffer.sample_batch()
+
     for image, (target_value ,target_policy) in batch:
       image_tensor = np2torch(image).unsqueeze(0)
       target_value = torch.tensor(target_value, dtype=torch.float32).to(device).unsqueeze(0).unsqueeze(0)
@@ -306,16 +320,16 @@ def train_network(config: AlphaZeroConfig, storage: SharedStorage,
       value, policy_logits = network.inference(image_tensor)
       policy_logits = policy_logits.squeeze(0)
       value_loss = torch.nn.functional.mse_loss(value, target_value)
-      policy_loss = torch.nn.functional.cross_entropy(policy_logits, target_policy)
+      policy_loss = torch.nn.functional.cross_entropy(policy_logits, target_policy) * config.policy_loss_weight
       loss = value_loss + policy_loss
       # loss = torch.nn.functional.mse_loss(value, target_value) + \
       #        torch.nn.functional.cross_entropy(policy_logits, target_policy)
       # save loss
-      storage.record_loss(value_loss.item(), policy_loss.item(), loss.item())
-
       optimizer.zero_grad()
       loss.backward()
       optimizer.step()
+      
+      storage.record_loss(value_loss.item(), policy_loss.item(), loss.item())
     # update_weights(optimizer, network, batch, config.weight_decay)
   storage.save_network(config.training_steps, network.eval())
 

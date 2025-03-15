@@ -77,8 +77,10 @@ class GomokuGame(object):
         col = idx % self.size
 
         if self.check_win(self.board[row, col], row, col):
+            print(f"current player {self.board[row, col]} wins.")
             return True
         if len(self.history) == self.size * self.size:
+            print("All steps are taken.")
             return True
         return False
 
@@ -145,6 +147,8 @@ class GomokuGame(object):
         r = action // self.size
         c = action % self.size
         current_player = self.to_play()
+        if self.board[r, c] != 0:
+            raise ValueError("Illegal action: Existing stone in this position.")
         self.board[r, c] = current_player
         self.history.append(action)
 
